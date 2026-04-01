@@ -91,28 +91,3 @@ The resident's companion.
    npm install
    npx expo start
    ```
-
----
-
-## 📸 Screenshots & Previews
-
-> [!TIP]
-> Add your own beautiful screenshots here to wow your users! (Files like `preview.html` in the backend suggest a rich UI is already in place).
-
----
-
-## 📜 License
-This project is licensed under the [ISC License](LICENSE).
-
----
-
-## 🙌 Suggestions for a Beautiful Name
-- **HavenHub**: Your Community's Central Pulse. (Chosen for this README)
-- **VestaFlow**: Seamless Management for Modern Living.
-- **Aura Estate**: Elegance in Property Management.
-- **Zenith Community**: Reach the Peak of Organized Living.
-- **NestSync**: Connecting Homes, Simplifying Lives.
-
----
-
-*Made with ❤️ by the HavenHub Team*
