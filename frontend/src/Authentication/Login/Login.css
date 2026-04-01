@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
+
+.login-page {
+    font-family: 'Lato', sans-serif;
+}
+
+.login-logo {
+    margin-left: 0;
+    font-family: 'Lato', sans-serif;
+}
+
+.login-box {
+    text-align: left;
+    font-family: 'Lato', sans-serif;
+}
+
+.login-title {
+    text-align: left;
+    font-family: 'Lato', sans-serif;
+}
+
+@media (min-width: 1024px) {
+    .login-logo {
+        margin-left: 0;
+    }
+}
+
+.input[type="checkbox"] {
+    display: none;
+    background-color: rgb(0, 255, 42) !important;
+  }

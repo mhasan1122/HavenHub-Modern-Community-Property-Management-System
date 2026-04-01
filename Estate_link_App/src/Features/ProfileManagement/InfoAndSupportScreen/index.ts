@@ -1,0 +1,2 @@
+export { InfoAndSupport } from './InfoAndSupport';
+

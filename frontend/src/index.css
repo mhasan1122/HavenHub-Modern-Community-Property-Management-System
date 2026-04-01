@@ -1,0 +1,182 @@
+/* These are Tailwind CSS directives - processed by PostCSS */
+/* @see https://tailwindcss.com/docs/installation/using-postcss */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* CSS Variables for layout dimensions */
+:root {
+  --header-height: 80px;
+  --main-content-padding-y: 24px; /* py-6 = 1.5rem = 24px */
+  --page-container-padding-y: 16px; /* py-4 = 1rem = 16px */
+  --available-height: calc(100vh - var(--header-height));
+  --content-height: calc(var(--available-height) - var(--main-content-padding-y) * 2);
+}
+
+/* Default: allow scrolling for auth pages */
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.member-profile-image11 {
+  width: 240px !important;
+  height: 240px !important;
+}
+.member_doc {
+  height: 50px !important;
+  width: 100px !important;
+}
+.table-status-button {
+  padding-left: 0.25rem !important; /* px-1 */
+  padding-right: 0.25rem !important; /* px-1 */
+  padding-top: 0.375rem !important; /* py-1.5 */
+  padding-bottom: 0.375rem !important; /* py-1.5 */
+  font-size: 0.75rem !important; /* text-xs */
+  width: 60px !important;
+  display: inline-block !important;
+}
+.member_doc_defult {
+  height: 50px !important;
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+
+  tr {
+    min-height: 44px;
+  }
+  td {
+    @apply py-3; /* Ensures spacing within cells */
+  }
+  /* Make all table headers slightly lighter-weight globally */
+  th {
+    @apply font-semibold;
+  }
+  /* Override any explicit font-bold on table headers to keep them lighter */
+  th.font-bold {
+    @apply font-semibold;
+  }
+}
+
+
+
+/* Hide the current month and year heading */
+.react-datepicker__current-month {
+ padding-top: 10px;
+ margin-bottom: 10px !important;
+}
+
+/* Fix DatePicker z-index to appear above table headers and other components */
+
+
+
+
+
+
+/* custom-scrollbar.css */
+.custom-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #3C9D9B transparent; /* thumb and track */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+  /* Shorter track to fit rounded corners - account for py-10 (40px) padding */
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3C9D9B;
+  border-radius: 8px;
+  border: none;
+  /* Smaller vertical height - ensure thumb doesn't get too tall */
+  min-height: 50px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #34877A;
+}
+
+/* Role Profile Scrollbar Styling */
+.role-profile-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #3C9D9B transparent; /* thumb and track */
+}
+
+.role-profile-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.role-profile-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.role-profile-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3C9D9B;
+  border-radius: 8px;
+  border: none;
+  min-height: 50px;
+}
+
+.role-profile-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #34877A;
+}
+
+/* Modern Loading Animation - Slower pulse */
+@keyframes slow-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.modern-loading-pulse {
+  animation: slow-pulse 2.5s ease-in-out infinite;
+}
+
+/* Role Assignment Notification Highlight Animation */
+@keyframes pulse-highlight {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(60, 157, 155, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(60, 157, 155, 0.4);
+  }
+}
+
+.animate-pulse-highlight {
+  animation: pulse-highlight 1s ease-in-out 3;
+}
+
+/* Global Utility to hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

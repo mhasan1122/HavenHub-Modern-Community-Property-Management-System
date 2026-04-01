@@ -1,0 +1,124 @@
+/* Print-specific styles for Accounts Ledger */
+@media print {
+
+  /* Reset page margins for better print output */
+  @page {
+    margin: 0.5cm;
+    size: A4;
+  }
+
+  /* Hide all unnecessary elements */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the ledger content */
+  .print\:block,
+  .print\:block *,
+  section,
+  section * {
+    visibility: visible;
+  }
+
+  /* Remove background colors for print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Optimize table for print */
+  table {
+    page-break-inside: auto;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 8px !important;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Ensure text is black for better print quality */
+  td,
+  th,
+  p,
+  h1,
+  h2,
+  h3,
+  span,
+  div {
+    color: #000 !important;
+  }
+
+  /* Remove borders that might not print well */
+  .rounded-lg,
+  .rounded-md,
+  .rounded {
+    border-radius: 0 !important;
+  }
+
+  /* Ensure proper spacing */
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 8px !important;
+  }
+
+  /* Make sure the table fits on the page */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Optimize font sizes for print */
+  th {
+    font-size: 7px !important;
+    padding: 2px 4px !important;
+  }
+
+  td {
+    font-size: 7px !important;
+    padding: 2px 4px !important;
+  }
+
+  /* Summary cards in print */
+  .grid {
+    font-size: 7px !important;
+  }
+
+  /* Remove shadows */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+    font-size: 10px !important;
+  }
+
+  /* Remove hover effects */
+  *:hover {
+    background-color: transparent !important;
+  }
+
+  /* Account info display */
+  .text-xs {
+    font-size: 7px !important;
+  }
+
+  .text-sm {
+    font-size: 8px !important;
+  }
+
+  .text-base {
+    font-size: 9px !important;
+  }
+}

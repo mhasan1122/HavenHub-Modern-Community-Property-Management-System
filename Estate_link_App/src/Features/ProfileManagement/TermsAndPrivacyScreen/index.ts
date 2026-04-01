@@ -1,0 +1,2 @@
+export { TermsAndPrivacy } from './TermsAndPrivacy';
+

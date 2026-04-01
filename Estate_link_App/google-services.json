@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "96594614040",
+    "project_id": "estatelink-9ac38",
+    "storage_bucket": "estatelink-9ac38.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96594614040:android:403fa00636d3a210beb06d",
+        "android_client_info": {
+          "package_name": "com.estatelink.estateapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIs4aVLUVAoWCGR4mVSgt6hJSg2DF-dSM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

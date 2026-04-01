@@ -1,0 +1,27 @@
+//  Created By Firoj Hasan
+
+.sidebar {
+    width: 40% !important; /* Sidebar width */
+    background-color: #3d9d9b;
+    color: white;
+    position: fixed; /* Keep sidebar fixed */
+    top: 0;
+    left: 0;
+    height: 100%;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0); /* Visible state */
+  }
+  
+  .sidebar.closed {
+    transform: translateX(-100%); /* Hidden state */
+  }
+  
+  .main-content {
+    flex-grow: 1;
+    padding-left: 50%; /* Main content starts from the right of the sidebar */
+    padding: 20px;
+  }
+  

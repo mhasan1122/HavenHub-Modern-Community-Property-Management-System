@@ -1,0 +1,57 @@
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+# 1. Users Table (Custom User Model)
+class User(models.Model):
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=128)
+
+# 2. Roles Table
+class Role(models.Model):
+    role_name = models.CharField(max_length=50, unique=True)
+    role_description = models.TextField(null=True, blank=True)
+
+# 3. OrganizationMembers Table
+class OrganizationMember(models.Model):
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('others', 'Others'),
+    ]
+
+    MARITAL_STATUS_CHOICES = [
+        ('married', 'Married'),
+        ('unmarried', 'Unmarried'),
+    ]
+
+    MEMBER_TYPE_CHOICES = [
+        ('Management', 'Management'),
+        ('Property Staff', 'Property Staff'),
+    ]
+
+    picture_url = models.ImageField(upload_to='member_pictures/', null=True, blank=True)
+    about_us = models.TextField(null=True, blank=True)
+    facebook_profile = models.URLField(null=True, blank=True)
+    linkedin_profile = models.URLField(null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    contact_number = models.CharField(max_length=15, null=True, blank=True)
+    nid_number = models.CharField(max_length=20, unique=True)
+    permanent_address = models.TextField(null=True, blank=True)
+    present_address = models.TextField(null=True, blank=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    occupation = models.CharField(max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+    marital_status = models.CharField(max_length=10, choices=MARITAL_STATUS_CHOICES, null=True, blank=True)
+    nid_front_url = models.ImageField(upload_to='nid_front/', null=True, blank=True)
+    nid_back_url = models.ImageField(upload_to='nid_back/', null=True, blank=True)
+    member_type = models.CharField(max_length=50, choices=MEMBER_TYPE_CHOICES)
+    username = models.CharField(max_length=255, unique=True)
+    password = models.CharField(max_length=255)
+    roles = models.ManyToManyField(Role, through='MemberRole', related_name='members')
+
+
+# 4. MemberRoles Table (Through table for Many-to-Many Relationship)
+class MemberRole(models.Model):
+    member = models.ForeignKey(OrganizationMember, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)

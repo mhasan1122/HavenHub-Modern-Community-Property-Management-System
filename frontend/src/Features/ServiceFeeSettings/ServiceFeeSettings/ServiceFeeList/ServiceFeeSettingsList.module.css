@@ -1,0 +1,131 @@
+/* Service Fee Settings List Table Styles */
+
+.serviceFeesTable {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Column width classes for consistent alignment */
+.towerNameColumn {
+  width: 200px;
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.unitsColumn {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center;
+}
+
+.feeAmountColumn {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  text-align: center;
+}
+
+.billingCycleColumn {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  text-align: center;
+}
+
+.dueDayColumn {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  text-align: center;
+}
+
+.paymentMethodsColumn {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  text-align: center;
+}
+
+.actionColumn {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  text-align: center;
+}
+
+/* Text wrapping for tower name column */
+.towerNameCell {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.towerNameText {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* Action column specific width for body */
+.actionColumnBody {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  text-align: center;
+}
+
+/* Ensure consistent table layout */
+.tableContainer {
+  overflow: hidden;
+}
+
+.tableHeader {
+  flex-shrink: 0;
+}
+
+.tableBody {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tableWrapper {
+  max-height: calc(100vh - 350px);
+  min-height: 400px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .towerNameColumn {
+    width: 150px;
+    min-width: 120px;
+    max-width: 150px;
+  }
+  
+  .paymentMethodsColumn {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+  }
+  
+  .actionColumn,
+  .actionColumnBody {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 992px) {
+  .dueDayColumn {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+  }
+  
+  .feeAmountColumn {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+  }
+}

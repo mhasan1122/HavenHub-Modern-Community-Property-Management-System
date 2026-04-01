@@ -1,0 +1,11 @@
+{
+    "name": "estate-link-root",
+    "version": "1.0.0",
+    "description": "Root script to run full stack project",
+    "scripts": {
+        "start": "run_all"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}

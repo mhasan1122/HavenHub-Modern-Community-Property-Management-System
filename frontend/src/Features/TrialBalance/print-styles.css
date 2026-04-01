@@ -1,0 +1,83 @@
+/* Minimal CSS to preserve exact Tailwind styling in Print and PDF */
+@media print {
+
+  /* Define A4 page properties */
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  /* Force browsers to print exact background colors and text colors */
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide all non-essential elements from the main application */
+  body>*:not(#root) {
+    display: none !important;
+  }
+
+  /* Specifically hide the main layout navigation */
+  #sidebar-navigation {
+    display: none !important;
+  }
+
+  /* Reset layout constraints so the main content can flow naturally for multi-page print */
+  .h-dvh {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .flex-1 {
+    overflow: visible !important;
+  }
+
+  main {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force full width on print */
+  .print-container,
+  #pdf-report-container,
+  table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Adjust fonts for A4 Portrait */
+  .print-container {
+    zoom: 75%;
+    /* Scaled down slightly more for portrait */
+  }
+
+  /* Handle page breaks properly to avoid cutting rows in half */
+  table {
+    page-break-inside: auto;
+    border-collapse: collapse !important;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* Avoid breaking summary cards */
+  .report-overview-grid {
+    page-break-inside: avoid;
+  }
+}

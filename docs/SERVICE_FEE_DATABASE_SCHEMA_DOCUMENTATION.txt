@@ -1,0 +1,917 @@
+================================================================================
+    SERVICE FEE MANAGEMENT SYSTEM - DATABASE SCHEMA & ARCHITECTURE
+================================================================================
+
+Version: 1.0
+Date: January 2026
+Project: Estate Link - Service Fee Management Module
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. System Overview
+2. Database Schema
+3. Entity Relationships
+4. Payment Flow
+5. Query Optimization
+6. API Specifications
+7. Performance Strategy
+8. Implementation Guide
+9. Quick Reference
+
+================================================================================
+1. SYSTEM OVERVIEW
+================================================================================
+
+CORE FUNCTIONALITY
+------------------
+✓ Monthly service fee generation per unit
+✓ Multiple line items per bill (base fee + utilities + penalties)
+✓ Advanced penalty and waiver management
+✓ Partial payment tracking within the same month
+✓ Payment hierarchy enforcement (penalty → base → utilities)
+
+KEY DESIGN PRINCIPLES
+---------------------
+1. Separation of Concerns: Bills (what's owed) vs Transactions (what's paid)
+2. Immutable Snapshots: Historical configurations don't change
+3. Query Optimization: Single SQL query for complex data
+4. Payment Hierarchy: Automatic allocation following business rules
+
+================================================================================
+2. DATABASE SCHEMA
+================================================================================
+
+CORE TABLES STRUCTURE
+---------------------
+
+---------------------------------------------------------------------------
+PROPERTY STRUCTURE TABLES
+---------------------------------------------------------------------------
+
+Table: towers_tower (Tower)
+---------------------------
+├── id [PK, INT]
+├── tower_name [VARCHAR(255)]
+├── created_at [DATETIME]
+└── updated_at [DATETIME]
+
+Table: towers_floor (Floor)
+---------------------------
+├── id [PK, INT]
+├── tower_id [FK → towers_tower, INDEXED]
+├── floor_name [VARCHAR(100)]
+└── created_at [DATETIME]
+
+Table: towers_unit (Unit) ⭐ PRIMARY REFERENCE
+---------------------------------------------
+├── id [PK, INT]
+├── floor_id [FK → towers_floor, INDEXED]
+├── unit_name [VARCHAR(50)]
+├── primary_name [VARCHAR(255)]
+├── primary_email [VARCHAR(255)]
+├── secondary_name [VARCHAR(255)]
+├── secondary_email [VARCHAR(255)]
+├── unit_status [VARCHAR(20)]
+└── created_at [DATETIME]
+
+---------------------------------------------------------------------------
+BILLING CONFIGURATION TABLES
+---------------------------------------------------------------------------
+
+Table: service_fee_servicefee (ServiceFee)
+------------------------------------------
+├── id [PK, INT]
+├── fee_amount [DECIMAL(10,2)]
+├── frequency [VARCHAR(20)]
+├── currency [VARCHAR(3)]
+├── is_active [BOOLEAN]
+└── created_at [DATETIME]
+
+Table: service_fee_management_servicefeegenerationconfig (GenerationConfig)
+---------------------------------------------------------------------------
+├── id [PK, INT]
+├── service_fee_id [FK → service_fee_servicefee]
+├── year [INT]
+├── month [INT]
+├── fee_amount [DECIMAL(15,2)] -- SNAPSHOT at generation time
+├── currency [VARCHAR(3)]
+├── frequency [VARCHAR(20)]
+├── due_day [INT]
+└── created_at [DATETIME]
+
+---------------------------------------------------------------------------
+MAIN BILLING RECORD TABLE
+---------------------------------------------------------------------------
+
+Table: service_fee_management_servicefeepayment ⭐ MAIN BILLING RECORD
+----------------------------------------------------------------------
+├── id [PK, INT]
+├── unit_id [FK → towers_unit, INDEXED]
+├── service_fee_id [FK → service_fee_servicefee, INDEXED]
+├── resident_id [FK → user_member, INDEXED]
+├── generation_config_id [FK → generationconfig]
+├── service_period_month [INT, INDEXED]
+├── service_period_year [INT, INDEXED]
+├── amount [DECIMAL(10,2)] -- Total bill amount
+├── remaining_amount [DECIMAL(10,2)] -- What's still owed
+├── base_service_amount [DECIMAL(10,2)]
+├── additional_bill_charges [DECIMAL(10,2)]
+├── service_status [VARCHAR(20), INDEXED] -- due/partial/paid/overdue
+├── payment_status [VARCHAR(20)] -- pending/completed/failed
+├── due_date [DATE]
+├── created_at [DATETIME, INDEXED]
+└── updated_at [DATETIME]
+
+INDEXES:
+--------
+- idx_payment_unit_period (unit_id, service_period_year, service_period_month)
+- idx_payment_status (service_status, payment_status)
+- idx_payment_period_status (service_period_year, service_period_month, service_status)
+
+---------------------------------------------------------------------------
+LINE ITEMS BREAKDOWN TABLE
+---------------------------------------------------------------------------
+
+Table: service_fee_management_servicefeeitem (ServiceFeeItem)
+-------------------------------------------------------------
+├── id [PK, INT]
+├── service_fee_payment_id [FK → servicefeepayment, INDEXED]
+├── item_type [VARCHAR(20), INDEXED] -- base_fee/penalty/bill_category
+├── item_name [VARCHAR(255)]
+├── amount [DECIMAL(10,2)]
+├── bill_category_id [FK → bill_categories_billcategory, INDEXED]
+├── consumption [DECIMAL(10,2)] -- For utilities
+├── price_per_unit [DECIMAL(10,2)] -- For utilities
+├── previous_reading [DECIMAL(10,2)]
+├── current_reading [DECIMAL(10,2)]
+├── unit_of_measurement [VARCHAR(20)]
+├── penalty_waiver_id [FK → penalty_waivers]
+├── description [TEXT]
+└── created_at [DATETIME]
+
+INDEXES:
+--------
+- idx_item_payment_type (service_fee_payment_id, item_type)
+- idx_item_category (bill_category_id)
+
+---------------------------------------------------------------------------
+TRANSACTION RECORDS TABLE
+---------------------------------------------------------------------------
+
+Table: service_fee_payment_details (ServiceFeeBilling)
+------------------------------------------------------
+├── id [PK, INT]
+├── servicefeepaymentid_id [FK → servicefeepayment, INDEXED]
+├── transaction_id [VARCHAR(100), UNIQUE, INDEXED]
+├── receipt_id [VARCHAR(100), UNIQUE]
+├── billing_id [VARCHAR(100), UNIQUE]
+├── billing_amount [DECIMAL(10,2)] -- Amount of this transaction
+├── total_paid [DECIMAL(10,2)] -- Cumulative
+├── payment_method_id [FK → payment_methods]
+├── payment_date [DATETIME, INDEXED]
+├── reference_number [VARCHAR(100)]
+├── notes [TEXT]
+├── received_by_id [FK → user_member]
+├── received_by_name [VARCHAR(255)]
+├── from_account_number [VARCHAR(100)]
+├── to_account_number [VARCHAR(100)]
+├── to_account_name [VARCHAR(255)]
+├── other_method_name [VARCHAR(100)]
+├── voucher_id [INT]
+├── payment_account_code [VARCHAR(20)]
+├── payment_account_name [VARCHAR(255)]
+├── created_at [DATETIME, INDEXED]
+└── updated_at [DATETIME]
+
+INDEXES:
+--------
+- idx_billing_transaction (transaction_id)
+- idx_billing_payment_date (servicefeepaymentid_id, payment_date)
+
+---------------------------------------------------------------------------
+SUPPORTING TABLES
+---------------------------------------------------------------------------
+
+Table: service_fee_penalty_waivers (PenaltyWaiver)
+--------------------------------------------------
+├── id [PK, INT]
+├── billing_id [FK → service_fee_payment_details, INDEXED]
+├── waiver_type [VARCHAR(20)] -- full/partial_percentage/partial_fixed
+├── percentage [DECIMAL(5,2)]
+├── penalty_amount [DECIMAL(10,2)] -- Before waiver
+├── waived_amount [DECIMAL(10,2)]
+├── penalty_after_waiver [DECIMAL(10,2)]
+├── reason [VARCHAR(255)]
+├── notes [TEXT]
+├── applied_by_id [FK → user_member]
+└── applied_at [DATETIME, INDEXED]
+
+Table: service_fee_advance_payments (AdvancePayment)
+----------------------------------------------------
+├── id [PK, INT]
+├── unit_id [FK → towers_unit, INDEXED]
+├── resident_id [FK → user_member]
+├── advance_type [VARCHAR(20)]
+├── amount [DECIMAL(10,2)]
+├── applied_amount [DECIMAL(10,2)]
+├── remaining_amount [DECIMAL(10,2)]
+├── status [VARCHAR(20), INDEXED] -- available/partial/applied/cancelled
+├── source_payment_id [INT]
+├── currency [VARCHAR(3)]
+├── created_at [DATETIME, INDEXED]
+├── applied_at [DATETIME]
+└── expired_at [DATETIME]
+
+Table: bill_categories_billcategory (BillCategory)
+--------------------------------------------------
+├── id [PK, INT]
+├── name [VARCHAR(100)] -- electricity, gas, water
+├── category_type [VARCHAR(50)]
+└── is_active [BOOLEAN]
+
+Table: service_fee_payment_methods (PaymentMethod)
+--------------------------------------------------
+├── id [PK, INT]
+├── method_name [VARCHAR(100)] -- Cash, bKash, Nagad, Bank Transfer
+├── is_active [BOOLEAN]
+├── display_order [INT]
+├── icon [VARCHAR(100)]
+├── description [TEXT]
+├── created_at [DATETIME]
+└── updated_at [DATETIME]
+
+Table: user_member (Member)
+---------------------------
+├── id [PK, INT]
+├── full_name [VARCHAR(255)]
+├── general_email [VARCHAR(255)]
+└── general_contact [VARCHAR(20)]
+
+================================================================================
+3. ENTITY RELATIONSHIPS
+================================================================================
+
+RELATIONSHIP MAP
+----------------
+
+Tower (1) ─────► (N) Floor
+Floor (1) ─────► (N) Unit
+Unit (1) ───────► (N) ServiceFeePayment
+
+ServiceFee (1) ────► (N) ServiceFeePayment
+ServiceFee (1) ────► (N) GenerationConfig
+GenerationConfig (1) ─► (N) ServiceFeePayment
+
+ServiceFeePayment (1) ─► (N) ServiceFeeItem
+ServiceFeePayment (1) ─► (N) ServiceFeeBilling
+
+ServiceFeeItem (N) ────► (1) BillCategory
+ServiceFeeBilling (N) ──► (1) PaymentMethod
+ServiceFeeBilling (1) ──► (N) PenaltyWaiver
+
+Member (1) ─────────────► (N) ServiceFeePayment (as resident)
+Member (1) ─────────────► (N) ServiceFeeBilling (as received_by)
+
+DATA FLOW: BILL GENERATION → PAYMENT
+-------------------------------------
+
+STEP 1: BILL GENERATION
+=======================
+Admin generates bills for January 2024
+
+ServiceFeePayment Created:
+├── Unit: 101
+├── Period: January 2024
+├── Amount: ৳5150
+├── Remaining: ৳5150
+└── Status: due
+
+ServiceFeeItem Records Created:
+├── Base Fee: ৳3000 (item_type='base_fee')
+├── Electricity: ৳1500 (item_type='bill_category')
+├── Gas: ৳500 (item_type='bill_category')
+└── Penalty: ৳150 (item_type='penalty')
+
+STEP 2: FIRST PAYMENT
+=====================
+Admin records ৳3000 payment
+
+ServiceFeePayment Updated:
+├── Amount: ৳5150 (unchanged)
+├── Remaining: ৳2150 (was ৳5150)
+└── Status: partial (was due)
+
+ServiceFeeBilling Created (Transaction #1):
+├── Transaction ID: TXN-202401-ABC
+├── Billing Amount: ৳3000
+├── Payment Method: Cash
+└── Payment Date: 2024-01-15
+
+Payment Allocation (Hierarchy):
+├── Penalty: ৳150 (fully paid)
+└── Base Fee: ৳2850 (partial from ৳3000)
+
+STEP 3: SECOND PAYMENT
+======================
+Admin records ৳2150 payment
+
+ServiceFeePayment Updated:
+├── Amount: ৳5150
+├── Remaining: ৳0
+└── Status: paid ✓
+
+ServiceFeeBilling Created (Transaction #2):
+├── Transaction ID: TXN-202401-XYZ
+├── Billing Amount: ৳2150
+└── Payment Date: 2024-01-20
+
+Payment Allocation:
+├── Base Fee: ৳150 (completing the ৳3000)
+├── Electricity: ৳1500 (fully paid)
+└── Gas: ৳500 (fully paid)
+
+================================================================================
+4. PAYMENT FLOW
+================================================================================
+
+PAYMENT HIERARCHY (AUTOMATIC ALLOCATION)
+-----------------------------------------
+
+When a payment is recorded, the system automatically allocates funds in order:
+
+Payment Received: ৳3000
+
+STEP 1: Allocate to Penalties FIRST
+────────────────────────────────────
+Query: SELECT * FROM servicefeeitem 
+       WHERE service_fee_payment_id = ? AND item_type = 'penalty'
+       
+Found: Late Fee = ৳150
+Allocated: ৳150
+Remaining: ৳2850
+
+STEP 2: Allocate to Base Service Fee
+─────────────────────────────────────
+Query: SELECT * FROM servicefeeitem 
+       WHERE service_fee_payment_id = ? AND item_type = 'base_fee'
+       
+Found: Service Fee = ৳3000
+Allocated: ৳2850 (partial)
+Remaining: ৳0
+
+STEP 3: Allocate to Bill Categories
+────────────────────────────────────
+Query: SELECT * FROM servicefeeitem 
+       WHERE service_fee_payment_id = ? AND item_type = 'bill_category'
+       
+Found: Electricity = ৳1500, Gas = ৳500
+Allocated: ৳0 (no remaining funds)
+Remaining: ৳0
+
+RESULT:
+✓ Penalty fully paid
+✓ Base fee partially paid (৳2850 of ৳3000)
+✗ Utilities not paid yet
+
+STATUS TRANSITIONS
+------------------
+
+Initial State: DUE
+──────────────────
+remaining_amount = amount (৳5150 = ৳5150)
+service_status = 'due'
+
+Event: Partial Payment (৳3000)
+──────────────────────────────
+remaining_amount = ৳2150 (0 < remaining < amount)
+service_status = 'partial'
+
+Event: Full Payment (additional ৳2150)
+──────────────────────────────────────
+remaining_amount = ৳0
+service_status = 'paid'
+
+Event: Past Due Date (no payment)
+─────────────────────────────────
+current_date > due_date AND remaining_amount > 0
+service_status = 'overdue'
+
+================================================================================
+5. QUERY OPTIMIZATION
+================================================================================
+
+PROBLEM: N+1 QUERY PATTERN (SLOW)
+----------------------------------
+
+# BAD APPROACH - Multiple Database Queries
+
+# Query 1: Fetch all payments
+payments = ServiceFeePayment.objects.filter(
+    service_period_month=1,
+    service_period_year=2024
+)  # 1 query
+
+results = []
+for payment in payments:  # Loop through 100 payments
+    # Query 2-101: Fetch items for each payment
+    items = payment.items.all()  # 100 queries
+    
+    # Query 102-201: Fetch billings for each payment
+    billings = payment.billing_records.all()  # 100 queries
+    
+    # Query 202-301: Fetch unit data
+    unit = payment.unit  # 100 queries
+    
+    results.append({...})
+
+# Total: 1 + (100 × 3) = 301 queries
+# Time: 2-3 seconds
+
+SOLUTION: OPTIMIZED SINGLE QUERY (FAST)
+----------------------------------------
+
+SELECT 
+    -- Payment fields
+    p.id AS payment_id,
+    p.unit_id,
+    p.service_period_month,
+    p.service_period_year,
+    p.amount,
+    p.remaining_amount,
+    p.service_status,
+    
+    -- Unit & Tower info (JOINed)
+    u.unit_name,
+    t.tower_name,
+    
+    -- Resident info (JOINed)
+    m.full_name AS resident_name,
+    
+    -- Aggregated items (JSON for efficiency)
+    (SELECT JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'item_type', i.item_type,
+            'item_name', i.item_name,
+            'amount', i.amount
+        )
+    ) FROM service_fee_management_servicefeeitem i 
+    WHERE i.service_fee_payment_id = p.id) AS service_fee_items,
+    
+    -- Total paid (Aggregation)
+    COALESCE((SELECT SUM(b.total_paid) 
+              FROM service_fee_payment_details b 
+              WHERE b.servicefeepaymentid_id = p.id), 0) AS total_paid
+
+FROM service_fee_management_servicefeepayment p
+INNER JOIN towers_unit u ON p.unit_id = u.id
+INNER JOIN towers_floor f ON u.floor_id = f.id
+INNER JOIN towers_tower t ON f.tower_id = t.id
+LEFT JOIN user_member m ON p.resident_id = m.id
+
+WHERE p.service_period_month = 1 
+  AND p.service_period_year = 2024
+  
+ORDER BY p.created_at DESC
+LIMIT 100;
+
+# Total: 1 query
+# Time: 150-200ms
+
+PERFORMANCE COMPARISON
+----------------------
+
+Metric              | Before (N+1)   | After (Optimized) | Improvement
+--------------------|----------------|-------------------|-------------
+Query Count         | 301 queries    | 1 query           | 300x fewer
+Response Time       | 2-3 seconds    | 150-200ms         | 10-15x faster
+Database CPU        | 60-80%         | 20-30%            | 60% reduction
+Memory Usage        | High           | Low               | Significant
+Network Round Trips | 301 trips      | 1 trip            | 300x reduction
+
+================================================================================
+6. API SPECIFICATIONS
+================================================================================
+
+ENDPOINT: BILLING LIST VIEW
+---------------------------
+
+GET /api/service-fee-management/billing-detailed/
+
+QUERY PARAMETERS:
+-----------------
+Parameter                   | Type          | Required | Description
+----------------------------|---------------|----------|---------------------------
+service_period_month_from   | Integer       | No       | Start month (1-12)
+service_period_year_from    | Integer       | No       | Start year
+service_period_month_to     | Integer       | No       | End month (1-12)
+service_period_year_to      | Integer       | No       | End year
+tower_ids                   | Array[Integer]| No       | Filter by towers
+status                      | Array[String] | No       | Filter by status
+search                      | String        | No       | Search query
+page                        | Integer       | No       | Page number
+limit                       | Integer       | No       | Records per page
+
+RESPONSE FORMAT:
+----------------
+{
+  "success": true,
+  "data": {
+    "payments": [
+      {
+        "payment_id": 123,
+        "unit_id": 456,
+        "unit_name": "101",
+        "tower_id": 1,
+        "tower_name": "Tower A",
+        "resident_id": 789,
+        "resident_name": "John Doe",
+        "resident_email": "john@example.com",
+        "service_period_month": 1,
+        "service_period_year": 2024,
+        "amount": 5150.00,
+        "remaining_amount": 2150.00,
+        "base_service_amount": 3000.00,
+        "additional_bill_charges": 2000.00,
+        "service_status": "partial",
+        "payment_status": "completed",
+        "gross_penalty_amount": 150.00,
+        "waived_amount": 0.00,
+        "total_paid": 3000.00,
+        "due_date": "2024-01-10",
+        "transaction_id": "TXN-202401-ABC123",
+        "receipt_id": "RCP-2024-01-00123",
+        "service_fee_items": [
+          {
+            "item_type": "base_fee",
+            "item_name": "Service Fee",
+            "amount": 3000.00
+          },
+          {
+            "item_type": "bill_category",
+            "item_name": "Electricity",
+            "amount": 1500.00,
+            "consumption": 300,
+            "price_per_unit": 5.00
+          }
+        ]
+      }
+    ]
+  },
+  "count": 1,
+  "total": 1
+}
+
+ENDPOINT: PAYMENT RECORDING
+----------------------------
+
+POST /api/service-fee-management/payments/record/
+
+REQUEST BODY:
+-------------
+{
+  "unit_id": 456,
+  "service_fee_id": 1,
+  "service_period_month": 1,
+  "service_period_year": 2024,
+  "amount": 3000.00,
+  "payment_method_id": 1,
+  "reference_number": "REF123",
+  "notes": "Partial payment received",
+  "received_by_name": "Admin User",
+  "from_account_number": "0123456789",
+  "send_email": true
+}
+
+RESPONSE:
+---------
+{
+  "success": true,
+  "message": "Payment recorded successfully",
+  "data": {
+    "payment_id": 123,
+    "billing_id": 456,
+    "transaction_id": "TXN-202401-ABC123",
+    "receipt_id": "RCP-2024-01-00123",
+    "amount": 3000.00,
+    "remaining_amount": 2150.00,
+    "service_status": "partial",
+    "payment_date": "2024-01-15T10:30:00Z"
+  }
+}
+
+================================================================================
+7. PERFORMANCE STRATEGY
+================================================================================
+
+CRITICAL DATABASE INDEXES
+--------------------------
+
+-- 1. Composite Index: Unit + Period (MOST IMPORTANT)
+CREATE INDEX idx_payment_unit_period 
+ON service_fee_management_servicefeepayment(
+    unit_id, 
+    service_period_year, 
+    service_period_month
+);
+
+-- 2. Status Filtering Index
+CREATE INDEX idx_payment_status_composite 
+ON service_fee_management_servicefeepayment(
+    service_status, 
+    payment_status, 
+    created_at DESC
+);
+
+-- 3. Period-Based Query Index
+CREATE INDEX idx_payment_period_status 
+ON service_fee_management_servicefeepayment(
+    service_period_year, 
+    service_period_month, 
+    service_status
+);
+
+-- 4. Item Lookup Index
+CREATE INDEX idx_item_payment_type 
+ON service_fee_management_servicefeeitem(
+    service_fee_payment_id, 
+    item_type
+);
+
+-- 5. Billing Transaction Index
+CREATE INDEX idx_billing_payment_date 
+ON service_fee_payment_details(
+    servicefeepaymentid_id, 
+    payment_date DESC
+);
+
+-- 6. Transaction ID Lookup
+CREATE INDEX idx_billing_transaction 
+ON service_fee_payment_details(
+    transaction_id
+);
+
+-- 7. Waiver Aggregation Index
+CREATE INDEX idx_waiver_billing 
+ON service_fee_penalty_waivers(
+    billing_id, 
+    applied_at
+);
+
+QUERY OPTIMIZATION TECHNIQUES
+------------------------------
+
+1. JSON Aggregation for Nested Data
+   - Use JSON_ARRAYAGG() to fetch related items in single query
+   - Reduces round trips between application and database
+
+2. Subquery Aggregations
+   - Calculate SUM, COUNT, MAX in database not application
+   - Offload computation to database engine
+
+3. Strategic JOIN Usage
+   - INNER JOIN for required relationships
+   - LEFT JOIN for optional relationships
+   - Avoid unnecessary JOINs
+
+4. Index-Aware WHERE Clauses
+   - Filter on indexed columns first
+   - Use exact matches when possible
+   - Avoid functions on indexed columns
+
+5. LIMIT Early
+   - Apply LIMIT in SQL not application
+   - Reduces data transfer
+
+================================================================================
+8. IMPLEMENTATION GUIDE
+================================================================================
+
+STEP 1: CREATE MIGRATION FOR INDEXES
+-------------------------------------
+
+Create file: backend/service_fee_management/migrations/0106_add_performance_indexes.py
+
+Run migration:
+cd backend
+python manage.py migrate service_fee_management 0106
+
+STEP 2: VERIFY INDEXES CREATED
+-------------------------------
+
+-- Check indexes on ServiceFeePayment table
+SHOW INDEXES FROM service_fee_management_servicefeepayment;
+
+-- Check indexes on ServiceFeeItem table
+SHOW INDEXES FROM service_fee_management_servicefeeitem;
+
+-- Check indexes on ServiceFeeBilling table
+SHOW INDEXES FROM service_fee_payment_details;
+
+STEP 3: UPDATE VIEWS WITH OPTIMIZED QUERY
+------------------------------------------
+
+The optimized billing query is already implemented in views.py
+at the BillingDetailedListView endpoint.
+
+STEP 4: TEST PERFORMANCE
+------------------------
+
+Add to settings.py for development:
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+This will log all SQL queries in console.
+Verify only 1 query is executed for billing list.
+
+STEP 5: MONITOR QUERY PERFORMANCE
+----------------------------------
+
+-- Enable slow query log (MySQL)
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 0.2;  -- Log queries > 200ms
+SET GLOBAL slow_query_log_file = '/var/log/mysql/slow-query.log';
+
+-- Check query execution plan
+EXPLAIN SELECT ... FROM service_fee_management_servicefeepayment ...;
+
+================================================================================
+9. QUICK REFERENCE
+================================================================================
+
+COMMON DJANGO ORM QUERIES
+--------------------------
+
+# Get billing for specific unit/period
+payment = ServiceFeePayment.objects.get(
+    unit_id=unit_id,
+    service_period_month=month,
+    service_period_year=year
+)
+
+# Get all line items
+items = payment.items.all()
+
+# Get specific item types
+base_fees = payment.items.filter(item_type='base_fee')
+penalties = payment.items.filter(item_type='penalty')
+bill_categories = payment.items.filter(item_type='bill_category')
+
+# Get all transactions
+billings = payment.billing_records.all()
+
+# Calculate total paid
+from django.db.models import Sum
+total_paid = payment.billing_records.aggregate(
+    total=Sum('total_paid')
+)['total'] or 0
+
+# Check payment status
+is_fully_paid = payment.service_status == 'paid'
+is_partial = payment.service_status == 'partial'
+is_overdue = payment.service_status == 'overdue'
+
+IMPORTANT FORMULAS
+------------------
+
+# Total Bill Amount
+total_bill = base_fee + sum(bill_categories) + penalty - waiver
+
+# Remaining Amount
+remaining = total_bill - total_paid
+
+# Service Status
+if remaining == 0:
+    service_status = 'paid'
+elif 0 < remaining < total_bill:
+    service_status = 'partial'
+elif remaining == total_bill and date.today() > due_date:
+    service_status = 'overdue'
+else:
+    service_status = 'due'
+
+TABLE RELATIONSHIPS REFERENCE
+------------------------------
+
+From Table         | To Table          | Relationship  | Foreign Key Field
+-------------------|-------------------|---------------|----------------------------
+Floor              | Tower             | Many-to-One   | tower_id
+Unit               | Floor             | Many-to-One   | floor_id
+ServiceFeePayment  | Unit              | Many-to-One   | unit_id
+ServiceFeePayment  | ServiceFee        | Many-to-One   | service_fee_id
+ServiceFeePayment  | Member            | Many-to-One   | resident_id
+ServiceFeeItem     | ServiceFeePayment | Many-to-One   | service_fee_payment_id
+ServiceFeeItem     | BillCategory      | Many-to-One   | bill_category_id
+ServiceFeeBilling  | ServiceFeePayment | Many-to-One   | servicefeepaymentid_id
+ServiceFeeBilling  | PaymentMethod     | Many-to-One   | payment_method_id
+PenaltyWaiver      | ServiceFeeBilling | Many-to-One   | billing_id
+
+STATUS VALUES REFERENCE
+-----------------------
+
+ServiceFeePayment.service_status:
+  - 'due' - No payment made yet
+  - 'partial' - Partially paid
+  - 'paid' - Fully paid
+  - 'overdue' - Past due date and not paid
+
+ServiceFeeBilling.payment_status:
+  - 'pending' - Payment initiated
+  - 'completed' - Payment confirmed
+  - 'failed' - Payment attempt failed
+  - 'cancelled' - Payment was cancelled
+  - 'refunded' - Payment was refunded
+
+ServiceFeeItem.item_type:
+  - 'base_fee' - Base service fee
+  - 'penalty' - Late payment penalty
+  - 'bill_category' - Utility charges
+  - 'unit_specific' - Custom unit charges
+
+PenaltyWaiver.waiver_type:
+  - 'full' - Full waiver (100%)
+  - 'partial_percentage' - Percentage-based waiver
+  - 'partial_fixed' - Fixed amount waiver
+
+NAMING CONVENTIONS
+------------------
+
+Transaction IDs:
+  Format: TXN-YYYYMM-XXXXX
+  Example: TXN-202401-ABC12
+
+Receipt IDs:
+  Format: RCP-YYYY-MM-XXXXX
+  Example: RCP-2024-01-00123
+
+Billing IDs:
+  Format: BILL-YYYY-MM-XXXXX
+  Example: BILL-2024-01-00123
+
+BEST PRACTICES
+--------------
+
+1. Always use transactions for payment recording
+2. Validate payment amounts before recording
+3. Check remaining_amount before allowing new payments
+4. Create audit trails for all payment operations
+5. Use generation configs not service_fee for historical data
+6. Index foreign keys that are frequently queried
+7. Cache frequently accessed data
+8. Log slow queries and optimize them
+9. Test with production-like data volumes
+10. Monitor database performance metrics
+
+KEY CONCEPTS SUMMARY
+--------------------
+
+TWO-LAYER ARCHITECTURE:
+  ServiceFeePayment (Monthly Bill Record)
+  ├── ServiceFeeItem (What was billed - line items)
+  └── ServiceFeeBilling (What was paid - transactions)
+
+PAYMENT HIERARCHY:
+  Payment Amount
+  └─► 1. Penalties FIRST
+      └─► 2. Base Service Fee
+          └─► 3. Bill Categories (utilities)
+
+STATUS LOGIC:
+  remaining_amount = 0        → service_status = 'paid'
+  0 < remaining_amount < amount → service_status = 'partial'
+  remaining_amount = amount    → service_status = 'due'
+  past due_date AND not paid   → service_status = 'overdue'
+
+PERFORMANCE KEYS:
+  ✓ Single SQL query with JOINs
+  ✓ JSON aggregation for nested data
+  ✓ Composite indexes on filter columns
+  ✓ Database-level grouping and aggregation
+
+================================================================================
+END OF DOCUMENT
+================================================================================
+
+Document Version: 1.0
+Last Updated: January 2026
+Maintained By: Estate Link Development Team
+
+For questions or updates, refer to the project repository:
+Repository: estate-link
+Module: backend/service_fee_management
+
+================================================================================

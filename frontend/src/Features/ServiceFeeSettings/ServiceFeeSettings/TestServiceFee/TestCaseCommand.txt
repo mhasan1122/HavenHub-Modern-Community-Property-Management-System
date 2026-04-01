@@ -1,0 +1,24 @@
+                                     
+                                     
+                                     
+                                      Run In the Command Panel 
+                                      -------------------------
+
+                                    **  cd frontend  then run the Command **
+
+
+1. Create Service fee test case
+ ---->  npm test -- --testPathPatterns="CreateServiceFee.test.jsx"
+
+2. Service Fee settings list Test case
+  --->  npm test -- --testPathPatterns="ServiceFeeSettingsList.test.jsx"
+
+3. Cancel Service Fee settings list Test case
+
+ -->  npm test -- --testPathPatterns="CancelledServiceFeesList.test.jsx"
+
+4. History of service Fee test case
+-->   npm test -- --testPathPatterns="ServiceFeeHistoryModal.test.jsx"
+
+5. Edit serviceFee Test case
+-->  npm test -- --testPathPatterns="EditServiceFee.test.jsx"

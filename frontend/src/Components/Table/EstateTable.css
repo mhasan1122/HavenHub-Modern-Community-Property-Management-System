@@ -1,0 +1,4 @@
+.custom-placeholder::placeholder {
+    font-size: 16px;
+    color: #3D9D9B;
+}

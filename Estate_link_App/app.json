@@ -1,0 +1,101 @@
+{
+  "expo": {
+    "name": "EstateLink",
+    "slug": "EstateLink",
+    "version": "1.3.15",
+    "icon": "./assets/Estate link App Icon.png",
+    "sdkVersion": "54.0.0",
+    "owner": "estatelink",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "plugins": [
+      "expo-updates",
+      "@react-native-firebase/app",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "gradleVersion": "8.3",
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24,
+            "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "useFrameworks": "static",
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBMessaging"
+            ],
+            "buildReactNativeFromSource": true
+          }
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/Estate link App Icon.png",
+          "color": "#3D9D9B",
+          "sounds": []
+        }
+      ],
+      "./plugins/withFirebaseManifestFix.js",
+      "expo-font"
+    ],
+    "splash": {
+      "image": "./assets/Logo.png",
+      "resizeMode": "contain",
+      "imageWidth": 50,
+      "imageHeight": 64
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/79fadb60-740c-44e7-9b3f-ebf41181adc5"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.estatelink.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.estatelink.estateapp",
+      "versionCode": 39,
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Estate link App Icon.png",
+        "backgroundColor": "#2D7A78"
+      },
+      "permissions": [
+        "INTERNET",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "79fadb60-740c-44e7-9b3f-ebf41181adc5"
+      }
+    }
+  }
+}

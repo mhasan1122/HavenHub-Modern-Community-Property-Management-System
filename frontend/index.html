@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Estate%20link%20App%20Icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EstateLink - Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Set title immediately based on current pathname before React loads
+      (function() {
+        const pathname = window.location.pathname;
+        const routeTitles = {
+          '/': 'Dashboard',
+          '/member-list': 'Member List',
+          '/create-member': 'Create Member',
+          '/important-contacts': 'Important Contacts',
+          '/group-list': 'Group List',
+          '/add-group': 'Add Group',
+          '/role-list': 'Role List',
+          '/addRole': 'Add Role',
+          '/ViewTowers': 'Towers',
+          '/addTower': 'Add Tower',
+          '/announcements': 'Announcements',
+          '/create-announcement': 'Create Announcement',
+          '/bulletins': 'Bulletins',
+          '/create-bulletin': 'Create Bulletin',
+          '/notice-board': 'Notice Board',
+          '/service-fee-settings': 'Service Fee Settings',
+          '/service-fee-settings/cancelled': 'Archive List',
+          '/service-fee-list': 'Service Fee Payments',
+          '/unit-payment-history': 'Unit Payment History',
+          '/unit-receivables': 'Unit Receivables',
+          '/service-fee-overview': 'Service Fee Overview',
+          '/service-fee-reports': 'Service Fee Reports',
+          '/service-fee-schedule-configuration': 'Service Fee Schedule Configuration',
+          '/service-fee-reminders': 'Service Fee Reminders',
+          '/settings': 'Settings',
+          '/community-member-list': 'Community Members',
+          '/community-Vehicle-list': 'Community Vehicles',
+          '/login': 'Login',
+          '/forgotPassword': 'Forgot Password',
+          '/verifyCode': 'Verify Code',
+          '/setNewPassword': 'Set New Password',
+        };
+        
+        function getTitle(path) {
+          // Check exact match first
+          if (routeTitles[path]) {
+            return routeTitles[path];
+          }
+          
+          // Check dynamic routes
+          const dynamicPatterns = [
+            { pattern: /^\/member-profile\/[^/]+$/, title: 'Member Profile' },
+            { pattern: /^\/general-information-edit\/[^/]+$/, title: 'Edit Member - General Information' },
+            { pattern: /^\/MemberTypeAndRoleEdit\/[^/]+$/, title: 'Edit Member - Type & Role' },
+            { pattern: /^\/edit-group\/[^/]+$/, title: 'Edit Group' },
+            { pattern: /^\/groupProfile\/[^/]+$/, title: 'Group Profile' },
+            { pattern: /^\/addRole\/[^/]+$/, title: 'Edit Role' },
+            { pattern: /^\/roleProfile\/[^/]+$/, title: 'Role Profile' },
+            { pattern: /^\/editTower\/[^/]+$/, title: 'Edit Tower' },
+            { pattern: /^\/add-unit\/[^/]+$/, title: 'Add / Edit Unit' },
+            { pattern: /^\/unit-details\/[^/]+$/, title: 'Unit Details' },
+            { pattern: /^\/unit-history\/[^/]+$/, title: 'Unit History' },
+            { pattern: /^\/Unit-vehicles\/[^/]+$/, title: 'Unit Vehicles' },
+            { pattern: /^\/unit\/[^/]+\/add-owner$/, title: 'Add Owner' },
+            { pattern: /^\/unit\/[^/]+\/edit-owner\/[^/]+$/, title: 'Edit Owner' },
+            { pattern: /^\/unit\/[^/]+\/change-owner$/, title: 'Change Owner' },
+            { pattern: /^\/resident_info_edit\/[^/]+\/[^/]+$/, title: 'Edit Resident Info' },
+            { pattern: /^\/owner-details\/[^/]+\/[^/]+$/, title: 'Owner Details' },
+            { pattern: /^\/addResident\/[^/]+$/, title: 'Add Resident' },
+            { pattern: /^\/resident-details\/[^/]+\/[^/]+$/, title: 'Resident Details' },
+            { pattern: /^\/addUnitStaff\/[^/]+$/, title: 'Add Unit Staff' },
+            { pattern: /^\/add-vehicle\/[^/]+$/, title: 'Add Vehicle' },
+            { pattern: /^\/edit-vehicle\/[^/]+\/[^/]+$/, title: 'Edit Vehicle' },
+            { pattern: /^\/login-credential-edit\/[^/]+$/, title: 'Edit Login Credential' },
+            { pattern: /^\/edit-announcement\/[^/]+$/, title: 'Edit Announcement' },
+            { pattern: /^\/edit-bulletin\/[^/]+$/, title: 'Edit Bulletin' },
+            { pattern: /^\/notice-board\/edit\/[^/]+$/, title: 'Edit Notice' },
+            { pattern: /^\/service-fee-settings\/[^/]+$/, title: 'View Service Fee Settings' },
+            { pattern: /^\/unit-payment-history\/[^/]+$/, title: 'Unit Payment History' },
+            { pattern: /^\/unit-ledger\/[^/]+$/, title: 'Unit Ledger' },
+            { pattern: /^\/unit-staff-edit\/[^/]+\/[^/]+$/, title: 'Edit Unit Staff' },
+          ];
+          
+          for (const { pattern, title } of dynamicPatterns) {
+            if (pattern.test(path)) {
+              return title;
+            }
+          }
+          
+          return 'Dashboard';
+        }
+        
+        const title = getTitle(pathname);
+        document.title = 'EstateLink - ' + title;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

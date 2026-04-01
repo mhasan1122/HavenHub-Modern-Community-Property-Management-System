@@ -1,0 +1,167 @@
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    ADVANCE PAYMENT APPLICATION - FLOW DIAGRAM                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ❌ OLD FLOW (REMOVED)                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────┐
+    │  Bill Generation Process │
+    │  (generate_service_fees) │
+    └────────────┬─────────────┘
+                 │
+                 ▼
+    ┌──────────────────────────┐
+    │  Auto-apply Advances     │
+    │  (during generation)     │
+    └────────────┬─────────────┘
+                 │
+                 ▼
+    ┌──────────────────────────┐
+    │  Create Billing Records  │
+    │  payment_type='advance'  │
+    └──────────────────────────┘
+
+    ⚠️  PROBLEM: If bills already exist, advances are NOT applied!
+
+
+                            ⬇️  CHANGED TO  ⬇️
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        ✅ NEW FLOW (IMPLEMENTED)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────┐
+    │  User Records Payment    │
+    │  payment_type='advance'  │
+    └────────────┬─────────────┘
+                 │
+                 ▼
+    ┌──────────────────────────┐
+    │  ServiceFeeBilling       │
+    │  Created in Database     │
+    └────────────┬─────────────┘
+                 │
+                 ▼
+    ┌──────────────────────────┐
+    │  🔔 Signal Triggered     │
+    │  post_save signal fires  │
+    └────────────┬─────────────┘
+                 │
+                 ▼
+    ┌──────────────────────────────────────────────┐
+    │  apply_advance_to_existing_bills()           │
+    │  (advance_payment_applicator.py)             │
+    └────────────┬─────────────────────────────────┘
+                 │
+                 ├─────────────────────┬──────────────────────┐
+                 ▼                     ▼                      ▼
+    ┌─────────────────────┐  ┌──────────────────┐  ┌─────────────────────┐
+    │ Find Available      │  │ Find Unpaid      │  │ Apply FIFO Logic    │
+    │ Advances (FIFO)     │  │ Bills (by date)  │  │ Oldest → Newest     │
+    │ 💰 DB Query         │  │ 📋 DB Query      │  │ ⚙️  Processing      │
+    └──────────┬──────────┘  └────────┬─────────┘  └──────────┬──────────┘
+               │                      │                       │
+               └──────────────────────┴───────────────────────┘
+                                      │
+                                      ▼
+                        ┌──────────────────────────┐
+                        │  Update Records:         │
+                        │  • Advance status        │
+                        │  • Bill total_paid       │
+                        │  • Bill remaining_amount │
+                        │  • Payment status        │
+                        └────────────┬─────────────┘
+                                     │
+                                     ▼
+                        ┌──────────────────────────┐
+                        │  Create Billing Records  │
+                        │  for Audit Trail         │
+                        │  payment_type='advance'  │
+                        └────────────┬─────────────┘
+                                     │
+                                     ▼
+                        ┌──────────────────────────┐
+                        │  ✅ SUCCESS              │
+                        │  Advances Applied!       │
+                        └──────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              EXAMPLE SCENARIO                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+BEFORE:
+  Unit B-101 has:
+    • December Bill: ৳18,080 (UNPAID)
+    • January Bill: ৳32,920 (UNPAID)
+    • Available Advance: ৳50,000
+
+ACTION:
+  User records advance payment of ৳50,000
+
+AFTER (Automatic):
+  Unit B-101 has:
+    • December Bill: ৳18,080 (PAID) ← ৳18,080 from advance
+    • January Bill: ৳32,920 (PAID) ← ৳31,920 from advance
+    • Available Advance: ৳0 (DEPLETED)
+    
+  Database Records Created:
+    • ServiceFeeBilling #1: ৳18,080 applied to December
+    • ServiceFeeBilling #2: ৳31,920 applied to January
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            KEY COMPONENTS                                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. UTILITY FUNCTION
+   📁 utils/advance_payment_applicator.py
+   🔧 apply_advance_to_existing_bills()
+   
+2. SIGNAL HANDLER
+   📁 signals.py
+   🔔 apply_advance_on_billing_creation()
+   
+3. MANAGEMENT COMMAND
+   📁 management/commands/apply_existing_advances.py
+   ⚙️  python manage.py apply_existing_advances
+   
+4. DOCUMENTATION
+   📁 ADVANCE_PAYMENT_IMPLEMENTATION.md
+   📖 Complete implementation guide
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          DATABASE TABLES AFFECTED                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ service_fee_advance_payments                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • applied_amount ↑     (increased when applied)                              │
+│ • remaining_amount ↓   (decreased when applied)                              │
+│ • status              (available → partial → depleted)                       │
+│ • applied_at          (timestamp when fully used)                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ service_fee_management_servicefeepayment                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • total_paid ↑         (increased by advance amount)                         │
+│ • remaining_amount ↓   (decreased by advance amount)                         │
+│ • payment_status       (pending → partial → completed)                       │
+│ • service_status       (due → partial → paid)                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ service_fee_payment_details (ServiceFeeBilling)                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • NEW RECORDS created with payment_type='advance_payment'                    │
+│ • Each record tracks one advance application transaction                     │
+│ • Provides complete audit trail                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```

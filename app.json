@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "2d20c30b-0885-4790-bde9-60311e870643"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.estatelink.estatelinkroot",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

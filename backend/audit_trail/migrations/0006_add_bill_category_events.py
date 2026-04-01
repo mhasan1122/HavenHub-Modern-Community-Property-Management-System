@@ -1,0 +1,56 @@
+# Generated migration for bill category events
+
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('audit_trail', '0005_add_company_settings_events'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='audittrail',
+            name='event_type',
+            field=models.CharField(
+                choices=[
+                    ('MEMBER_CREATED', 'MEMBER CREATED'),
+                    ('MEMBER_UPDATED', 'MEMBER UPDATED'),
+                    ('MEMBER_STATUS_CHANGED', 'MEMBER STATUS CHANGED'),
+                    ('GROUP_CREATE', 'Group Created'),
+                    ('GROUP_UPDATE', 'Group Updated'),
+                    ('GROUP_STATUS_CHANGE', 'GROUP STATUS CHANGE'),
+                    ('ROLE_CREATED', 'ROLE CREATED'),
+                    ('ROLE_UPDATED', 'ROLE UPDATED'),
+                    ('ROLE_STATUS_CHANGED', 'ROLE STATUS CHANGED'),
+                    ('PAYMENT_CREATED', 'PAYMENT CREATED'),
+                    ('PAYMENT_UPDATED', 'PAYMENT UPDATED'),
+                    ('PAYMENT_DELETED', 'PAYMENT DELETED'),
+                    ('PAYMENT_STATUS_CHANGED', 'PAYMENT STATUS CHANGED'),
+                    ('SERVICE_FEE_CREATED', 'SERVICE FEE CREATED'),
+                    ('SERVICE_FEE_UPDATED', 'SERVICE FEE UPDATED'),
+                    ('SERVICE_FEE_DELETED', 'SERVICE FEE DELETED'),
+                    ('SERVICE_FEE_STATUS_CHANGED', 'SERVICE FEE STATUS CHANGED'),
+                    ('SERVICE_FEE_CANCELLED', 'SERVICE FEE CANCELLED'),
+                    ('SERVICE_FEE_ACTIVATED', 'SERVICE FEE ACTIVATED'),
+                    ('SERVICE_FEE_DEACTIVATED', 'SERVICE FEE DEACTIVATED'),
+                    ('REMINDER_CREATED', 'REMINDER CREATED'),
+                    ('REMINDER_UPDATED', 'REMINDER UPDATED'),
+                    ('REMINDER_DELETED', 'REMINDER DELETED'),
+                    ('REMINDER_STATUS_CHANGED', 'REMINDER STATUS CHANGED'),
+                    ('REMINDER_SENT', 'REMINDER SENT'),
+                    ('REMINDER_ACTIVATED', 'REMINDER ACTIVATED'),
+                    ('REMINDER_DEACTIVATED', 'REMINDER DEACTIVATED'),
+                    ('COMPANY_SETTINGS_UPDATED', 'COMPANY SETTINGS UPDATED'),
+                    ('COMPANY_IMAGE_UPLOADED', 'COMPANY IMAGE UPLOADED'),
+                    ('COMPANY_IMAGE_DELETED', 'COMPANY IMAGE DELETED'),
+                    ('BILL_CATEGORY_CREATED', 'BILL CATEGORY CREATED'),
+                    ('BILL_CATEGORY_UPDATED', 'BILL CATEGORY UPDATED'),
+                    ('BILL_CATEGORY_DELETED', 'BILL CATEGORY DELETED'),
+                    ('BILL_CATEGORY_STATUS_CHANGED', 'BILL CATEGORY STATUS CHANGED'),
+                ],
+                max_length=30
+            ),
+        ),
+    ]
